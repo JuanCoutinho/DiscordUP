@@ -1,0 +1,96 @@
+/* This is a CSS file */
+
+/**/
+
+   /* Estilizando a scrollbar */
+            ::-webkit-scrollbar {
+              width: 12px;
+            }
+
+            ::-webkit-scrollbar-track {
+              background: #2d3748; /* Cor de fundo da pista */
+            }
+
+            ::-webkit-scrollbar-thumb {
+              background: linear-gradient(45deg, #6b46c1, #7f3f98, #3b82f6, #9333ea); /* Gradiente roxo, lilás e azul */
+              border-radius: 6px;
+            }
+
+            ::-webkit-scrollbar-thumb:hover {
+              background: linear-gradient(45deg, #6a28b4, #9f53a7, #2563eb, #7c3aed); /* Gradiente mais intenso para hover */
+            }
+
+            /* Sidebar */
+            .sidebar {
+              position: fixed;
+              top: 0;
+              left: -250px;
+              width: 250px;
+              height: 100%;
+              background-color: #1a202c;
+              transition: left 0.3s ease;
+              z-index: 100;
+              border-right: 2px solid #2d3748;
+            }
+
+            .sidebar.open {
+              left: 0;
+            }
+
+            .sidebar .close-btn {
+              position: absolute;
+              top: 16px;
+              right: 16px;
+              font-size: 24px;
+              color: #fff;
+              cursor: pointer;
+            }
+
+            .sidebar ul {
+              padding-left: 0;
+            }
+
+            .sidebar ul li {
+              list-style: none;
+            }
+
+            .sidebar ul li a {
+              display: block;
+              padding: 16px;
+              color: #e2e8f0;
+              font-size: 18px;
+              font-weight: 600;
+              border-bottom: 1px solid #2d3748;
+              transition: background-color 0.3s ease, padding-left 0.3s ease;
+            }
+
+            .sidebar ul li a:hover {
+              background-color: #4a5568;
+              padding-left: 24px;
+            }
+
+            /* Botão de logout */
+            .sidebar ul li.logout a {
+              color: #e53e3e;
+              font-weight: bold;
+              text-transform: uppercase;
+            }
+
+            .sidebar ul li.logout a:hover {
+              background-color: #c53030;
+            }
+
+            /* Conteúdo principal */
+            .content {
+              transition: margin-left 0.3s ease;
+              margin-left: 0;
+            }
+
+            .content.shift {
+              margin-left: 250px;
+            }
+
+            /* Bloqueando o overflow horizontal quando a sidebar estiver aberta */
+            body.sidebar-open {
+              overflow-x: hidden; /* Impede o overflow horizontal */
+            }

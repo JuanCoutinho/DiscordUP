@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Discord UP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="home.css" />
+</head>
+<body class="bg-gray-800 text-white min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="w-full bg-gray-900 py-4 shadow-lg flex justify-between items-center px-6">
+        <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">
+            Discord UP
+        </h1>
+        <button id="menu-btn" class="text-white text-2xl lg:hidden">
+            <i class="fas fa-bars"></i>
+        </button>
+    </header>
+
+    <!-- Sidebar -->
+    <div id="sidebar" class="sidebar fixed inset-0 bg-gray-900 bg-opacity-80 hidden lg:block">
+        <div class="sidebar-content p-6">
+            <button class="close-btn" id="close-sidebar">
+                <i class="fas fa-times"></i>
+            </button>
+            <ul class="space-y-4 text-white">
+                <li><a href="login.html" class="hover:bg-gray-700"><i class="fas fa-sign-in-alt"></i> Login</a></li>
+                <li><a href="register.html" class="hover:bg-gray-700"><i class="fas fa-user-plus"></i> Cadastro</a></li>
+                <li class="logout"><a href="#" class="hover:bg-gray-700" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main id="main-content" class="content container mx-auto flex flex-col items-center px-6 mt-8">
+        <!-- Campo de busca -->
+        <div class="w-full max-w-4xl mb-6 relative">
+            <input type="text" id="search-input" placeholder="Buscar Servidores..." class="w-full p-4 pl-12 pr-4 rounded-lg bg-gray-800 border border-gray-700 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none shadow-md transition duration-300 ease-in-out hover:border-indigo-500" />
+            <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+        </div>
+
+        <div id="servers-list" class="w-full max-w-4xl space-y-6"></div>
+    </main>
+
+    <!-- Add Server Button -->
+    <button id="open-modal-btn" class="fixed bottom-10 right-10 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-bold py-3 px-4 rounded-full shadow-lg hover:scale-105 transition-all duration-300 ease-in-out">
+        <i class="fas fa-plus-circle"></i> Adicionar Servidor
+    </button>
+
+    <!-- Add Server Modal -->
+    <div id="add-server-modal" class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center hidden">
+        <div class="bg-gray-900 p-6 rounded-lg shadow-lg w-full max-w-md">
+            <h2 class="text-2xl font-bold text-white mb-4">Adicionar Servidor</h2>
+            <form id="server-form">
+                <label for="invite-link" class="block text-lg font-medium mb-2">Link de Convite:</label>
+                <input type="text" id="invite-link" placeholder="Insira o link de convite do Discord" class="w-full p-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:ring-2 focus:ring-indigo-400 focus:outline-none" required />
+                <button type="submit" class="w-full mt-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 shadow-lg">
+                    <i class="fas fa-plus-circle"></i> Adicionar Servidor
+                </button>
+            </form>
+            <button id="close-modal-btn" class="absolute top-4 right-4 text-white text-2xl">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const apiUrl = 'http://localhost:3000/servers'; 
+        const form = document.getElementById('server-form');
+        const inviteLinkInput = document.getElementById('invite-link');
+        const serversList = document.getElementById('servers-list');
+        const sidebar = document.getElementById('sidebar');
+        const content = document.getElementById('main-content');
+        const menuBtn = document.getElementById('menu-btn');
+        const closeSidebarBtn = document.getElementById('close-sidebar');
+        const openModalBtn = document.getElementById('open-modal-btn');
+        const addServerModal = document.getElementById('add-server-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const searchInput = document.getElementById('search-input'); // Campo de busca
+        const logoutBtn = document.getElementById('logout-btn'); // Botão de logout
+
+        // Simulação de verificação de login
+        const isLoggedIn = true; // Alterar para a verificação real de login (ex: JWT, sessionStorage, etc.)
+        const authToken = localStorage.getItem('authToken'); // Obtenha o token de autenticação do localStorage
+
+        // Mostrar o botão de adicionar servidor apenas se o usuário estiver logado
+        if (isLoggedIn) {
+            openModalBtn.classList.remove('hidden');
+        }
+
+        const displayServers = async (searchTerm = '') => {
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`, // Passar o token de autenticação no cabeçalho
+                    },
+                });
+                const servers = await response.json();
+                serversList.innerHTML = '';
+                const filteredServers = servers.filter(server => server.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
+                filteredServers.forEach((server) => {
+                    const serverCard = document.createElement('div');
+                    serverCard.className = 'bg-gray-900 p-6 rounded-lg shadow-md flex items-center space-x-6';
+                    serverCard.innerHTML = `
+                        <img src="${server.image_url}" alt="${server.name}" class="w-16 h-16 rounded-full border-2 border-indigo-400" />
+                        <div>
+                            <h3 class="text-xl font-bold text-indigo-400">${server.name}</h3>
+                            <p class="text-gray-400">Membros: ${server.member_count}</p>
+                            <a href="${server.invite_link}" target="_blank" class="text-indigo-400 hover:text-indigo-500 transition-all duration-200">
+                                <button class="w-full mt-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 shadow-lg">
+                                    <i class="fas fa-sign-in-alt"></i> Entrar no Servidor
+                                </button>
+                            </a>
+                        </div>
+                    `;
+                    serversList.appendChild(serverCard);
+                });
+            } catch (error) {
+                console.error('Erro ao buscar servidores:', error);
+            }
+        };
+
+        const addServer = async (event) => {
+            event.preventDefault();
+            const inviteLink = inviteLinkInput.value;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`, // Passar o token de autenticação
+                    },
+                    body: JSON.stringify({
+                        server: {
+                            invite_link: inviteLink,
+                        },
+                    }),
+                });
+
+                if (response.ok) {
+                    displayServers();
+                    inviteLinkInput.value = ''; 
+                    closeModal();
+                }
+            } catch (error) {
+                console.error('Erro ao adicionar servidor:', error);
+            }
+        };
+
+        const toggleSidebar = () => {
+            sidebar.classList.toggle('hidden');
+        };
+
+        const openModal = () => {
+            addServerModal.classList.remove('hidden');
+        };
+
+        const closeModal = () => {
+            addServerModal.classList.add('hidden');
+        };
+
+        // Evento de logout
+        logoutBtn.addEventListener('click', () => {
+            localStorage.clear(); // Limpa o localStorage
+            window.location.href = 'home.html'; // Redireciona para a página inicial
+        });
+
+        menuBtn.addEventListener('click', toggleSidebar);
+        closeSidebarBtn.addEventListener('click', toggleSidebar);
+        openModalBtn.addEventListener('click', openModal);
+        closeModalBtn.addEventListener('click', closeModal);
+        form.addEventListener('submit', addServer);
+        searchInput.addEventListener('input', () => displayServers(searchInput.value));
+
+        displayServers();
+    </script>
+</body>
+</html>
